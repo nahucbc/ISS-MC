@@ -1,103 +1,110 @@
 import requests
 from .interface import Api
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag, ResultSet
 from json import dump
 
 class Forge(Api):
     
     def __init__(self) -> None:
         self.__modloader : str = "Forge"
-        self.__version = int = 1.1
-        self.__address : requests = requests.get('https://files.minecraftforge.net/net/minecraftforge/forge/')
+        self.__version : int = 1.1
+        self.__address : requests = requests.get('https://files.minecraftforge.net/net/minecraftforge/forge/').text
+        self.__index : list = []
 
     def about(self) -> None:
-        print(self.__modloader)
-        print(self.__version)
+        pass
 
     def __make_index(self) -> None:
-        soup : BeautifulSoup = BeautifulSoup(self.__address.text, features="html.parser")
+        soup : BeautifulSoup = BeautifulSoup(self.__address, features="html.parser")
+        scroll_panel_list : Tag = soup.find('ul', attrs={'class':'section-content scroll-pane'})
+        mc_versions : ResultSet = scroll_panel_list.find_all('ul', attrs={'class':'nav-collapsible'})
         
-        versions = soup.find('ul', attrs={'class':'section-content scroll-pane'})
-        versions = versions.find_all('ul', attrs={'class':'nav-collapsible'})
+        unfiltered_list : list = []
         
-        self.__index : list = []
+        for unfiltered_content in mc_versions:
+            unfiltered_list.append(unfiltered_content.text)
         
-        for i in versions:
-            self.__index.append(i.text)
-        
-        del soup
-        del versions
-        
-        index_clear = []
-        
-        for key in range(len(self.__index)):
-            for version in self.__index[key].split():
-                index_clear.append(version)
-        
-        
-        self.__index = index_clear
+        index_filtered : list = []
+        unfiltered_list_size : int = len(unfiltered_list)
 
+        for group_index in range(unfiltered_list_size):
+            for version in unfiltered_list[group_index].split():
+                index_filtered.append(version)
+
+        self.__index : list = index_filtered
+
+        del (
+            soup, scroll_panel_list, mc_versions, unfiltered_list, unfiltered_list_size ,unfiltered_content, 
+            index_filtered, group_index, version
+             )
+        
+        return None
+    
     def __filter(self, data : list, start : int, end : int) -> list:
         try:
-            temp = list()
-            num = len(data)
-            if num > 6:
+            temp : list = []
+            size : int = len(data)
+
+            if size > 6:
                 end += 1
-            if num == 4:
+            elif size == 4:
                 end += 1
-            for number in range(start, end):
-                shortener = data[number]
+
+            for url_position in range(start, end):
+                shortener = data[url_position]
                 link = shortener.split('=')
-                match(len(link)):
+                link_size = len(link)
+                match(link_size):
                     case 1:
                         temp.append(link[0])
                     case 3:
                         temp.append(link[2])
-                
-        except IndexError as er:
+            
+        except IndexError:
             pass
+
         finally:
-            del data 
-            del start
-            del  end
-            num = len(temp)
-            if num < 3:
-                del num
+            del (
+                data, start, end, size, url_position
+                 )
+            if len(temp) < 3:
                 return list()
             else:
-                del num 
                 return temp
     
     def __make_dict(self) -> dict:
         
         self.__make_index()
-        versions = dict()
+        group_versions : dict = {}
         
         for key in range(len(self.__index)):
-            version = dict()
-            index = self.__index[key]
-            page: requests = requests.get(f'https://files.minecraftforge.net/net/minecraftforge/forge/index_{index}.html')
-            soup : BeautifulSoup = BeautifulSoup(page.text, features="html.parser")
-            links = soup.find_all('div', attrs={'class':'link'})
-            
-            
-            temp_list = list()
+            version : int = self.__index[key]
+            version_page_content : requests = requests.get(f'https://files.minecraftforge.net/net/minecraftforge/forge/index_{version}.html').text
+            soup : BeautifulSoup = BeautifulSoup(version_page_content, features="html.parser")
+            links : ResultSet = soup.find_all('div', attrs={'class':'link'})
+            version_dict : dict = {}
+            temp_list : list = []
+
             for link in links:
                 temp_list.append(link.find('a')['href'])
             
             temp_latest : list = self.__filter(temp_list, 0, 3)
-            
             temp_recommended : list = self.__filter(temp_list, 3, 6)
 
-            version['latest'] = temp_latest
-            version['recommended'] = temp_recommended
-            versions[index] = version
+            version_dict['latest'] = temp_latest
+            version_dict['recommended'] = temp_recommended
+            group_versions[version] = version_dict
 
-        return versions
+            del (
+                version, version_page_content, version_dict, soup, link, links, temp_list, temp_latest, temp_recommended
+                )
+
+        return group_versions
 
     def export_to_json(self):
-        with open('data.json', 'w') as f:
-            dump(self.__make_dict(), f)
+        data : dict = self.__make_dict()
+        with open('./data/forge_data.json', 'w') as f:
+            dump(data, f)
 
         
         

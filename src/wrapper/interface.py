@@ -4,7 +4,7 @@ class Api:
 
     def __init__(self) -> None:
         self.__modloader : str
-        self.__version : str
+        self.__version : int
         self.__address : requests
 
     def about() -> None:
