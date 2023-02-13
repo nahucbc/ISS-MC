@@ -92,20 +92,12 @@ class Forge(Api):
             version['latest'] = temp_latest
             version['recommended'] = temp_recommended
             versions[index] = version
-            
+
         return versions
-
-    def __make_data(self) -> list:
-        self.__make_index()
-        return self.__make_dict()
-
-    def test(self):
-        self.__make_index()
-        print(self.__make_dict())
 
     def export_to_json(self):
         with open('data.json', 'w') as f:
-            dump(self.__make_data(), f)
+            dump(self.__make_dict(), f)
 
         
         
