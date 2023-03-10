@@ -1,21 +1,23 @@
 import requests
 from .interface import Api
 from bs4 import BeautifulSoup, Tag, ResultSet
-from json import dump
+from json import dump, loads
 
 class Forge(Api):
     
     def __init__(self) -> None:
         self.__modloader : str = "Forge"
         self.__version : int = 1.1
-        self.__address : requests = requests.get('https://files.minecraftforge.net/net/minecraftforge/forge/').text
+        
         self.__index : list = []
+        self.json : str = './data/forge.json'
 
     def about(self) -> None:
         pass
 
     def __make_index(self) -> None:
-        soup : BeautifulSoup = BeautifulSoup(self.__address, features="html.parser")
+        address : requests = requests.get('https://files.minecraftforge.net/net/minecraftforge/forge/').text
+        soup : BeautifulSoup = BeautifulSoup(address, features="html.parser")
         scroll_panel_list : Tag = soup.find('ul', attrs={'class':'section-content scroll-pane'})
         mc_versions : ResultSet = scroll_panel_list.find_all('ul', attrs={'class':'nav-collapsible'})
         
@@ -38,7 +40,7 @@ class Forge(Api):
             index_filtered, group_index, version
              )
         
-        return None
+        return
     
     def __filter(self, data : list, start : int, end : int) -> list:
         try:
@@ -64,9 +66,11 @@ class Forge(Api):
             pass
 
         finally:
+
             del (
                 data, start, end, size, url_position
                  )
+            
             if len(temp) < 3:
                 return list()
             else:
@@ -101,10 +105,12 @@ class Forge(Api):
 
         return group_versions
 
-    def export_to_json(self):
-        data : dict = self.__make_dict()
-        with open('./data/forge_data.json', 'w') as f:
+    def export_json(self):
+        with open(self.json, 'w') as f:
+            data : dict = self.__make_dict()
             dump(data, f)
 
-        
-        
+    def import_json(self):
+        with open(self.json, "r") as f:
+            content = f.read()
+            self.data : dict = loads(content)
