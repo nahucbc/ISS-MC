@@ -1,18 +1,21 @@
 from wrapper.forge import Forge
-from os import getcwd, mkdir
-from os.path import exists
+from small_def import if_not_exist_mkdir, data, cache
 
-paths = [f"{getcwd()}/data/"]
+if_not_exist_mkdir(data)
+if_not_exist_mkdir(cache)
 
-if not exists(paths[0]):
-    mkdir(paths[0])
+forge : Forge = Forge(data, cache)
 
 print("#########\nInit Script Server For Minecraft\n#########\n")
 print("1> Make Database")
-option = input(">")
+print("2> Install ")
 
+option = input(">")
 match(option):
     case("1"):
-        forge : Forge = Forge()
+        forge.export_json()
 
-        forge.export_to_json()
+    case("2"):
+        forge.import_json()
+        forge.download(cache, "1.19", "latest", "installer")
+        
