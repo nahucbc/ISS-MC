@@ -18,3 +18,6 @@ class Api:
 
     def download(self) -> None:
         pass
+
+    def install(self) -> None:
+        pass
