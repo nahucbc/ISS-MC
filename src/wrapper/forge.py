@@ -2,15 +2,18 @@ import requests
 from .interface import Api
 from bs4 import BeautifulSoup, Tag, ResultSet
 from json import dump, loads
+from pathlib import Path
+from os import system as sys
 
 class Forge(Api):
     
-    def __init__(self) -> None:
+    def __init__(self, path_data, cache) -> None:
         self.__modloader : str = "Forge"
         self.__version : int = 1.1
         
         self.__index : list = []
-        self.json : str = './data/forge.json'
+        self.json : str = Path(f'{path_data}/forge.json')
+        self.cache : str = cache
 
     def about(self) -> None:
         pass
@@ -114,3 +117,26 @@ class Forge(Api):
         with open(self.json, "r") as f:
             content = f.read()
             self.data : dict = loads(content)
+
+    def download(self, cache, version, type_build, type_file) -> None:
+        file = self.data[version][type_build]
+        file = [x for x in file if type_file in x][0]
+
+        name = file.split("/")
+        name = name[len(name) - 1]
+
+        req : requests = requests.get(file).content
+
+        if type_file == "installer":
+            mode = "wb"
+        else:
+            mode = "w"
+
+        dir = Path(f"{cache}/{name}")
+        with open(dir, mode) as f:
+            f.write(req)
+
+        self.install(dir, "./test")
+
+    def install(self, name, dir) -> None:
+        sys(f"java -jar {name} --installServer {dir}")
