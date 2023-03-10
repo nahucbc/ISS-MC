@@ -10,6 +10,11 @@ class Api:
     def about() -> None:
         pass
     
-    def export_to_json(self) -> None:
+    def export_json(self) -> None:
         pass
     
+    def import_json(self) -> None:
+        pass
+
+    def download(self) -> None:
+        pass
